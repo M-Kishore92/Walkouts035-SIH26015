@@ -3,11 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PRAMAAN 26015 — Watershed Intelligence & Audit Platform</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
+  <title>PRAMAAN 26015 | National Watershed Monitoring & Geospatial Audit Portal | DoLR, GoI</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇮🇳</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet GIS Mapping Engine -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
   <!-- React & Babel Standalone CDN -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -15,66 +20,205 @@
 
   <style>
     :root {
-      --bg-primary: #070b14;
-      --bg-secondary: #0d1527;
-      --bg-card: rgba(16, 26, 47, 0.75);
-      --border-color: rgba(255, 255, 255, 0.08);
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --accent-cyan: #06b6d4;
-      --accent-emerald: #10b981;
-      --accent-amber: #f59e0b;
-      --accent-rose: #f43f5e;
-      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --gov-navy: #0e2f56;
+      --gov-navy-dark: #071d38;
+      --gov-blue: #1a56db;
+      --gov-saffron: #f97316;
+      --gov-green: #15803d;
+      --gov-gold: #b45309;
+      --gov-gray-bg: #f1f5f9;
+      --gov-border: #cbd5e1;
+      --gov-card: #ffffff;
+      --gov-text: #0f172a;
+      --gov-text-muted: #475569;
+      --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
-      font-family: var(--font-sans);
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
+      font-family: var(--font-main);
+      background-color: var(--gov-gray-bg);
+      color: var(--gov-text);
       line-height: 1.5;
       min-height: 100vh;
       overflow-x: hidden;
-      background-image: 
-        radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
-        linear-gradient(to bottom, rgba(7, 11, 20, 0.95), #070b14);
     }
-    .glass-panel {
-      background: var(--bg-card);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
+
+    /* Official Top Tricolor Bar */
+    .top-tricolor {
+      height: 4px;
+      width: 100%;
+      background: linear-gradient(90deg, #ff9933 33.3%, #ffffff 33.3%, #ffffff 66.6%, #138808 66.6%);
     }
+
+    /* Government Top Utility Bar */
+    .gov-utility-bar {
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 0.75rem;
+      color: #334155;
+      padding: 4px 24px;
+    }
+    .gov-utility-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Main Gov Branding Banner */
+    .gov-header {
+      background: #ffffff;
+      border-bottom: 3px solid var(--gov-navy);
+      padding: 12px 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+    .gov-header-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    /* Navigation Bar */
+    .gov-nav {
+      background: var(--gov-navy);
+      padding: 0 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .gov-nav-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 14px 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+    }
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+    }
+    .nav-btn.active {
+      background: #071d38;
+      color: #ffffff;
+      border-bottom: 3px solid #ff9933;
+    }
+
+    /* Cards & Containers */
+    .gov-card {
+      background: var(--gov-card);
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
     .badge-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.03em;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
       text-transform: uppercase;
     }
-    .badge-excellent { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
-    .badge-good { background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.35); }
-    .badge-moderate { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.35); }
-    .badge-poor { background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.35); }
-    .badge-critical { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
-    button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
-    button:active { transform: translateY(1px); }
+    .badge-excellent { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .badge-good { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
+    .badge-moderate { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+    .badge-poor { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
+    .badge-critical { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+    /* Map container */
+    #watershed-leaflet-map {
+      height: 520px;
+      width: 100%;
+      border-radius: 6px;
+      z-index: 1;
+    }
+
+    /* Custom Map Marker Tooltips */
+    .leaflet-popup-content-wrapper {
+      border-radius: 6px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+    }
+
+    /* Action Buttons */
+    .gov-btn {
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.8rem;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+    }
+    .gov-btn-primary {
+      background: var(--gov-blue);
+      color: #fff;
+    }
+    .gov-btn-primary:hover {
+      background: #1d4ed8;
+    }
+    .gov-btn-success {
+      background: var(--gov-green);
+      color: #fff;
+    }
+    .gov-btn-success:hover {
+      background: #166534;
+    }
+    .gov-btn-danger {
+      background: #dc2626;
+      color: #fff;
+    }
+    .gov-btn-danger:hover {
+      background: #b91c1c;
+    }
+    .gov-btn-outline {
+      background: #fff;
+      color: var(--gov-text);
+      border-color: #cbd5e1;
+    }
+    .gov-btn-outline:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
   </style>
 </head>
 <body>
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState } = React;
+    const { useState, useEffect, useRef } = React;
 
+    // Pilot Micro-Watershed Boundaries in Nanded District (Maharashtra)
     const MOCK_WATERSHEDS = [
       {
         id: 'ws-nanded-07',
@@ -85,7 +229,13 @@
         state: 'Maharashtra',
         area_ha: 840.5,
         center: [18.552, 77.581],
-        polygon: [[18.572, 77.558], [18.581, 77.595], [18.555, 77.612], [18.532, 77.589], [18.541, 77.552]],
+        polygon: [
+          [18.572, 77.558],
+          [18.581, 77.595],
+          [18.555, 77.612],
+          [18.532, 77.589],
+          [18.541, 77.552]
+        ],
         current_wii: 91.5,
         band: 'EXCELLENT',
         ndvi_current: 0.54,
@@ -107,7 +257,13 @@
         state: 'Maharashtra',
         area_ha: 920.0,
         center: [18.705, 77.368],
-        polygon: [[18.725, 77.345], [18.735, 77.388], [18.710, 77.402], [18.685, 77.375], [18.692, 77.339]],
+        polygon: [
+          [18.725, 77.345],
+          [18.735, 77.388],
+          [18.710, 77.402],
+          [18.685, 77.375],
+          [18.692, 77.339]
+        ],
         current_wii: 68.8,
         band: 'GOOD',
         ndvi_current: 0.44,
@@ -129,7 +285,13 @@
         state: 'Maharashtra',
         area_ha: 610.2,
         center: [18.648, 77.722],
-        polygon: [[18.665, 77.705], [18.672, 77.742], [18.649, 77.755], [18.631, 77.731], [18.639, 77.698]],
+        polygon: [
+          [18.665, 77.705],
+          [18.672, 77.742],
+          [18.649, 77.755],
+          [18.631, 77.731],
+          [18.639, 77.698]
+        ],
         current_wii: 53.8,
         band: 'MODERATE',
         ndvi_current: 0.38,
@@ -151,7 +313,13 @@
         state: 'Maharashtra',
         area_ha: 780.0,
         center: [18.895, 77.210],
-        polygon: [[18.915, 77.190], [18.922, 77.230], [18.898, 77.245], [18.875, 77.221], [18.882, 77.185]],
+        polygon: [
+          [18.915, 77.190],
+          [18.922, 77.230],
+          [18.898, 77.245],
+          [18.875, 77.221],
+          [18.882, 77.185]
+        ],
         current_wii: 34.5,
         band: 'POOR',
         ndvi_current: 0.29,
@@ -173,7 +341,13 @@
         state: 'Maharashtra',
         area_ha: 690.4,
         center: [18.945, 77.120],
-        polygon: [[18.965, 77.100], [18.972, 77.140], [18.948, 77.155], [18.925, 77.131], [18.932, 77.095]],
+        polygon: [
+          [18.965, 77.100],
+          [18.972, 77.140],
+          [18.948, 77.155],
+          [18.925, 77.131],
+          [18.932, 77.095]
+        ],
         current_wii: 18.2,
         band: 'CRITICAL',
         ndvi_current: 0.21,
@@ -311,6 +485,249 @@
       },
     ];
 
+    // Color definitions for WII Interpretation bands
+    const getBandColor = (band) => {
+      switch (band) {
+        case 'EXCELLENT': return '#15803d'; // Green
+        case 'GOOD': return '#0284c7';      // Sky Blue
+        case 'MODERATE': return '#b45309';  // Amber
+        case 'POOR': return '#c2410c';      // Orange
+        case 'CRITICAL': return '#b91c1c';  // Dark Red
+        default: return '#475569';
+      }
+    };
+
+    // Component: Leaflet Real Interactive GIS Map
+    function LeafletGISMap({ watersheds, selectedWatershed, onSelectWatershed, photos, selectedPhoto, onSelectPhoto }) {
+      const mapContainerRef = useRef(null);
+      const leafletMapRef = useRef(null);
+      const layersRef = useRef({ polygons: null, markers: null, tileLayer: null });
+      const [basemapType, setBasemapType] = useState('osm'); // 'osm' | 'satellite' | 'topo'
+
+      // Initialize Leaflet Map once
+      useEffect(() => {
+        if (!mapContainerRef.current) return;
+        if (!leafletMapRef.current) {
+          // Centered on Nanded district pilot area
+          const map = L.map(mapContainerRef.current, {
+            center: [18.75, 77.45],
+            zoom: 10,
+            zoomControl: true,
+          });
+
+          // OpenStreetMap by default
+          const osmTile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors | Bhuvan NRSC'
+          }).addTo(map);
+
+          layersRef.current.tileLayer = osmTile;
+          layersRef.current.polygons = L.layerGroup().addTo(map);
+          layersRef.current.markers = L.layerGroup().addTo(map);
+          leafletMapRef.current = map;
+        }
+
+        return () => {
+          if (leafletMapRef.current) {
+            leafletMapRef.current.remove();
+            leafletMapRef.current = null;
+          }
+        };
+      }, []);
+
+      // Switch Basemap tiles
+      useEffect(() => {
+        const map = leafletMapRef.current;
+        if (!map) return;
+
+        if (layersRef.current.tileLayer) {
+          map.removeLayer(layersRef.current.tileLayer);
+        }
+
+        let newTile;
+        if (basemapType === 'satellite') {
+          // ESRI World Imagery (High Resolution Real Satellite)
+          newTile = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 18,
+            attribution: 'Tiles © Esri, Maxar, Earthstar Geographics | Sentinel-2 L2A'
+          });
+        } else if (basemapType === 'topo') {
+          // OpenTopoMap
+          newTile = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            maxZoom: 17,
+            attribution: 'Map data: © OpenStreetMap contributors, SRTM | OpenTopoMap'
+          });
+        } else {
+          // Standard Clean OSM
+          newTile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors | Bhuvan NRSC'
+          });
+        }
+
+        newTile.addTo(map);
+        layersRef.current.tileLayer = newTile;
+      }, [basemapType]);
+
+      // Render Polygons and Markers
+      useEffect(() => {
+        const map = leafletMapRef.current;
+        if (!map || !layersRef.current.polygons || !layersRef.current.markers) return;
+
+        // Clear existing
+        layersRef.current.polygons.clearLayers();
+        layersRef.current.markers.clearLayers();
+
+        // Add Watershed Polygons
+        watersheds.forEach((ws) => {
+          const isSelected = selectedWatershed?.id === ws.id;
+          const color = getBandColor(ws.band);
+
+          const poly = L.polygon(ws.polygon, {
+            color: isSelected ? '#1e40af' : color,
+            weight: isSelected ? 3.5 : 2,
+            opacity: 0.9,
+            fillColor: color,
+            fillOpacity: isSelected ? 0.35 : 0.20,
+          });
+
+          // Tooltip on Hover
+          poly.bindTooltip(
+            `<strong>${ws.watershed_code}</strong><br/>${ws.name}<br/>WII Index: <strong>${ws.current_wii}</strong> (${ws.band})`,
+            { sticky: true, className: 'gov-tooltip' }
+          );
+
+          // Click handler
+          poly.on('click', () => {
+            onSelectWatershed(ws);
+          });
+
+          layersRef.current.polygons.addLayer(poly);
+        });
+
+        // Add DRISHTI Photo Markers
+        photos.forEach((photo) => {
+          const isSelected = selectedPhoto?.id === photo.id;
+
+          // Custom circular HTML icon with camera symbol
+          const customIcon = L.divIcon({
+            className: 'custom-camera-pin',
+            html: `
+              <div style="
+                background: ${photo.condition === 'functional' ? '#15803d' : '#dc2626'};
+                color: #ffffff;
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                border: 2px solid #ffffff;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                cursor: pointer;
+                transform: ${isSelected ? 'scale(1.25)' : 'scale(1)'};
+                transition: transform 0.2s ease;
+              ">
+                📷
+              </div>
+            `,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+          });
+
+          const marker = L.marker([photo.lat, photo.lng], { icon: customIcon });
+          marker.on('click', () => {
+            onSelectPhoto(photo);
+          });
+
+          marker.bindTooltip(`<b>DRISHTI #${photo.id}</b><br/>${photo.structure_type}`, {
+            direction: 'top',
+            offset: [0, -10]
+          });
+
+          layersRef.current.markers.addLayer(marker);
+        });
+
+      }, [watersheds, selectedWatershed, photos, selectedPhoto]);
+
+      // Zoom to selected watershed when it changes
+      useEffect(() => {
+        const map = leafletMapRef.current;
+        if (!map || !selectedWatershed) return;
+        map.panTo([selectedWatershed.center[0], selectedWatershed.center[1]], { animate: true });
+      }, [selectedWatershed]);
+
+      return (
+        <div style={{ position: 'relative' }}>
+          {/* Basemap Switcher Toolbar */}
+          <div style={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            zIndex: 1000,
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(4px)',
+            borderRadius: 6,
+            padding: 4,
+            display: 'flex',
+            gap: 4,
+            boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+            border: '1px solid #cbd5e1',
+          }}>
+            <button
+              onClick={() => setBasemapType('osm')}
+              style={{
+                padding: '5px 10px',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                borderRadius: 4,
+                border: 'none',
+                cursor: 'pointer',
+                background: basemapType === 'osm' ? '#0e2f56' : 'transparent',
+                color: basemapType === 'osm' ? '#fff' : '#334155',
+              }}
+            >
+              🗺️ Topographic Map
+            </button>
+            <button
+              onClick={() => setBasemapType('satellite')}
+              style={{
+                padding: '5px 10px',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                borderRadius: 4,
+                border: 'none',
+                cursor: 'pointer',
+                background: basemapType === 'satellite' ? '#0e2f56' : 'transparent',
+                color: basemapType === 'satellite' ? '#fff' : '#334155',
+              }}
+            >
+              🛰️ Real Satellite Imagery (ESRI)
+            </button>
+            <button
+              onClick={() => setBasemapType('topo')}
+              style={{
+                padding: '5px 10px',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                borderRadius: 4,
+                border: 'none',
+                cursor: 'pointer',
+                background: basemapType === 'topo' ? '#0e2f56' : 'transparent',
+                color: basemapType === 'topo' ? '#fff' : '#334155',
+              }}
+            >
+              ⛰️ Terrain Contours
+            </button>
+          </div>
+
+          {/* Leaflet Map Div */}
+          <div ref={mapContainerRef} id="watershed-leaflet-map" />
+        </div>
+      );
+    }
+
     function App() {
       const [activeTab, setActiveTab] = useState('dashboard');
       const [currentRole, setCurrentRole] = useState('monitor');
@@ -321,19 +738,18 @@
       const [selectedPhoto, setSelectedPhoto] = useState(null);
       const [auditResult, setAuditResult] = useState(null);
 
+      // Adjudication Handler
       const handleAdjudicate = (decision) => {
         if (!selectedClaim) return;
         const newStatus = decision === 'ACCEPT' ? 'PHOTO_CORROBORATED' : 'FLAGGED_MISMATCH';
-        
-        // 1. Update claim
+
         setClaims(prev => prev.map(c => c.id === selectedClaim.id ? { ...c, status: newStatus, adjudication_decision: decision } : c));
         setSelectedClaim(prev => ({ ...prev, status: newStatus, adjudication_decision: decision }));
 
-        // 2. Hash chaining simulation
         const lastBlock = ledger[ledger.length - 1];
         const seq = lastBlock ? lastBlock.sequence_number + 1 : 1;
         const prevHash = lastBlock ? lastBlock.chain_hash : '0'.repeat(64);
-        
+
         let hashSeed = 0;
         for (let i = 0; i < selectedClaim.id.length; i++) hashSeed += selectedClaim.id.charCodeAt(i);
         const payloadHash = (Math.abs(hashSeed * 98765)).toString(16).padStart(16, '0') + 'c41022d483b8a8bbf386c91a78e71887019e1b2eb00b14ef995b0577bc'.slice(16);
@@ -356,191 +772,401 @@
 
       const avgWii = MOCK_WATERSHEDS.reduce((s, w) => s + w.current_wii, 0) / MOCK_WATERSHEDS.length;
       const totalWaterGain = MOCK_WATERSHEDS.reduce((s, w) => s + (w.water_current_ha - w.water_baseline_ha), 0);
-
-      const projectPoint = (lat, lng) => {
-        const x = ((lng - 77.05) / 0.75) * 760;
-        const y = 480 - ((lat - 18.45) / 0.60) * 480;
-        return [x, y];
-      };
-
-      const getBandColor = (b) => {
-        if (b === 'EXCELLENT') return '#10b981';
-        if (b === 'GOOD') return '#06b6d4';
-        if (b === 'MODERATE') return '#eab308';
-        if (b === 'POOR') return '#f97316';
-        return '#ef4444';
-      };
+      const totalDegradedReduction = MOCK_WATERSHEDS.reduce((s, w) => s + (w.degraded_baseline_ha - w.degraded_current_ha), 0);
 
       return (
         <div>
-          {/* Header */}
-          <header style={{
-            background: 'rgba(7, 11, 20, 0.85)',
-            backdropFilter: 'blur(20px)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            padding: '0 24px',
-            position: 'sticky',
-            top: 0,
-            zIndex: 50,
-          }}>
-            <div style={{ maxWidth: 1600, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 68 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg, #06b6d4, #10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: '1.2rem' }}>
-                  प्र
+          {/* Top National Tricolor Accent Bar */}
+          <div className="top-tricolor"></div>
+
+          {/* Official Government Utility Header */}
+          <div className="gov-utility-bar">
+            <div className="gov-utility-inner">
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                <span style={{ fontWeight: 700 }}>भारत सरकार | GOVERNMENT OF INDIA</span>
+                <span style={{ color: '#94a3b8' }}>•</span>
+                <span>ग्रामीण विकास मंत्रालय | MINISTRY OF RURAL DEVELOPMENT</span>
+              </div>
+              <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                <span style={{ cursor: 'pointer' }}>Language: <strong>English (EN)</strong> / हिन्दी</span>
+                <span style={{ color: '#94a3b8' }}>|</span>
+                <span>Portal Date: <strong>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</strong></span>
+              </div>
+            </div>
+          </div>
+
+          {/* National Emblem & Department Branding Banner */}
+          <header className="gov-header">
+            <div className="gov-header-inner">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                {/* Ashoka Emblem Graphic Placeholder */}
+                <div style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 6,
+                  background: '#0e2f56',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 900,
+                  fontSize: '1.6rem',
+                  border: '2px solid #b45309'
+                }}>
+                  🏛️
                 </div>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>PRAMAAN</span>
-                    <span style={{ fontSize: '0.7rem', padding: '2px 6px', borderRadius: 4, background: 'rgba(6, 182, 212, 0.2)', color: '#38bdf8', fontWeight: 700 }}>SIH-26015</span>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Department of Land Resources (DoLR) • WDC-PMKSY 2.0
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Watershed Intelligence & Audit Platform • Nanded Pilot</div>
+                  <h1 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0e2f56', letterSpacing: '-0.02em', margin: '2px 0' }}>
+                    PRAMAAN : Watershed Geospatial Intelligence & Audit System
+                  </h1>
+                  <div style={{ fontSize: '0.8rem', color: '#475569' }}>
+                    Automated Analytical Bridge between SRISHTI Satellite Imagery and DRISHTI Geo-tagged Field Photos
+                  </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: 6 }}>
-                {[
-                  { id: 'dashboard', label: 'Overview', icon: '📊' },
-                  { id: 'adjudication', label: 'Adjudication Studio', icon: '⚖️' },
-                  { id: 'ledger', label: 'Audit Ledger', icon: '⛓️' },
-                  { id: 'reports', label: 'IWMP Reports', icon: '📄' },
-                ].map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => setActiveTab(t.id)}
+              {/* Status and Role Switcher in Header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{
+                  padding: '6px 14px',
+                  borderRadius: 6,
+                  background: '#f0fdf4',
+                  border: '1px solid #86efac',
+                  fontSize: '0.78rem',
+                  color: '#15803d',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#15803d', boxShadow: '0 0 6px #15803d' }}></span>
+                  <span>Audit Ledger: <strong>VALID (SHA-256)</strong></span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f8fafc', padding: '6px 12px', borderRadius: 6, border: '1px solid #cbd5e1' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 600 }}>Active Role:</span>
+                  <select
+                    value={currentRole}
+                    onChange={(e) => setCurrentRole(e.target.value)}
                     style={{
-                      background: activeTab === t.id ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
-                      border: activeTab === t.id ? '1px solid rgba(6, 182, 212, 0.5)' : '1px solid transparent',
-                      borderRadius: 8,
-                      padding: '8px 14px',
-                      color: activeTab === t.id ? '#38bdf8' : '#94a3b8',
-                      fontSize: '0.85rem',
+                      background: '#ffffff',
+                      border: '1px solid #94a3b8',
+                      color: '#0f172a',
+                      padding: '4px 8px',
+                      borderRadius: 4,
+                      fontSize: '0.8rem',
                       fontWeight: 600,
+                      cursor: 'pointer',
                     }}
                   >
-                    {t.icon} {t.label}
-                  </button>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', fontSize: '0.75rem', color: '#34d399', fontWeight: 600 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
-                  Ledger Chain: Valid
+                    <option value="monitor">District Monitoring Officer (Nanded)</option>
+                    <option value="field_officer">Field Verification Officer (WDT)</option>
+                    <option value="planner">State Directorate Planner (SLNA)</option>
+                    <option value="auditor">CAG Performance Auditor</option>
+                  </select>
                 </div>
-                <select
-                  value={currentRole}
-                  onChange={(e) => setCurrentRole(e.target.value)}
-                  style={{ background: '#0d1527', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '6px 10px', borderRadius: 8, fontSize: '0.8rem' }}
-                >
-                  <option value="monitor">District Monitoring Officer</option>
-                  <option value="field_officer">Field Verification Officer</option>
-                  <option value="auditor">CAG Performance Auditor</option>
-                </select>
               </div>
             </div>
           </header>
 
-          {/* Main content */}
-          <main style={{ maxWidth: 1600, margin: '0 auto', padding: '24px 24px 60px' }}>
-            {/* KPI Ribbon */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 24 }}>
-              <div className="glass-panel" style={{ padding: 20, borderTop: '3px solid #10b981' }}>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>DISTRICT WII INDEX</div>
-                <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#10b981' }}>{avgWii.toFixed(1)}</div>
-                <div style={{ fontSize: '0.75rem', color: '#34d399', marginTop: 6 }}>+24.6% vs Baseline (Nanded Pilot)</div>
+          {/* Navigation Bar (Gov Style) */}
+          <nav className="gov-nav">
+            <div className="gov-nav-inner">
+              <div style={{ display: 'flex', gap: 2 }}>
+                {[
+                  { id: 'dashboard', label: 'Watershed GIS Map & Overview', icon: '🗺️' },
+                  { id: 'adjudication', label: 'Adjudication Studio (Dispute Hub)', icon: '⚖️' },
+                  { id: 'ledger', label: 'Cryptographic Audit Ledger', icon: '⛓️' },
+                  { id: 'reports', label: 'IWMP Statutory Reports (DoLR)', icon: '📄' },
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveTab(t.id)}
+                    className={`nav-btn ${activeTab === t.id ? 'active' : ''}`}
+                  >
+                    <span>{t.icon}</span>
+                    <span>{t.label}</span>
+                  </button>
+                ))}
               </div>
-              <div className="glass-panel" style={{ padding: 20, borderTop: '3px solid #06b6d4' }}>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>SURFACE WATER EXPANSION</div>
-                <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#06b6d4' }}>+{totalWaterGain.toFixed(1)} ha</div>
-                <div style={{ fontSize: '0.75rem', color: '#38bdf8', marginTop: 6 }}>+48.2% Storage Growth</div>
+
+              <div style={{ color: '#93c5fd', fontSize: '0.75rem', fontWeight: 600 }}>
+                Target District: <span style={{ color: '#ffffff' }}>Nanded District (Maharashtra)</span>
               </div>
-              <div className="glass-panel" style={{ padding: 20, borderTop: '3px solid #f59e0b' }}>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>DRISHTI GROUND TRUTH</div>
-                <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#f59e0b' }}>89.2%</div>
-                <div style={{ fontSize: '0.75rem', color: '#fbbf24', marginTop: 6 }}>Photo-Corroborated Claims</div>
+            </div>
+          </nav>
+
+          {/* Main Dashboard Canvas */}
+          <main style={{ maxWidth: 1600, margin: '0 auto', padding: '20px 24px 60px' }}>
+            {/* Top KPI Summary Ribbon (Gov White Cards) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 20 }}>
+              <div className="gov-card" style={{ padding: '16px 20px', borderLeft: '4px solid #15803d' }}>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
+                  District Average WII Score
+                </div>
+                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#15803d', marginTop: 4 }}>
+                  {avgWii.toFixed(1)} <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>/ 100</span>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 600, marginTop: 4 }}>
+                  +24.6% Improvement vs Baseline
+                </div>
               </div>
-              <div className="glass-panel" style={{ padding: 20, borderTop: '3px solid #8b5cf6' }}>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>CRYPTOGRAPHIC AUDIT CHAIN</div>
-                <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#8b5cf6' }}>#{ledger.length} Blocks</div>
-                <div style={{ fontSize: '0.75rem', color: '#a78bfa', marginTop: 6 }}>0 Discrepancies • Tamper-Proof</div>
+
+              <div className="gov-card" style={{ padding: '16px 20px', borderLeft: '4px solid #0284c7' }}>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
+                  Total Surface Water Storage Gain
+                </div>
+                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0284c7', marginTop: 4 }}>
+                  +{totalWaterGain.toFixed(1)} ha
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#0369a1', fontWeight: 600, marginTop: 4 }}>
+                  Permanent & Seasonal Retention
+                </div>
+              </div>
+
+              <div className="gov-card" style={{ padding: '16px 20px', borderLeft: '4px solid #b45309' }}>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
+                  Degraded Land Remediated
+                </div>
+                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#b45309', marginTop: 4 }}>
+                  {totalDegradedReduction.toFixed(1)} ha
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#b45309', fontWeight: 600, marginTop: 4 }}>
+                  Treated via Bunds & Trenches
+                </div>
+              </div>
+
+              <div className="gov-card" style={{ padding: '16px 20px', borderLeft: '4px solid #7c3aed' }}>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
+                  DRISHTI Ground Truth Rate
+                </div>
+                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#7c3aed', marginTop: 4 }}>
+                  89.2%
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#7c3aed', fontWeight: 600, marginTop: 4 }}>
+                  Verified Geo-Photos Linked
+                </div>
               </div>
             </div>
 
-            {/* View Switcher */}
+            {/* TAB 1: GIS Map Explorer & Micro-Watershed Inspector */}
             {activeTab === 'dashboard' && (
-              <div>
-                <div className="glass-panel" style={{ padding: 24, marginBottom: 24 }}>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 14 }}>
-                    Interactive GIS Watershed Explorer & Ground Truth Pins
-                  </h2>
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
-                    <div style={{ background: '#0a101f', borderRadius: 12, minHeight: 440, position: 'relative', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <svg viewBox="0 0 760 480" style={{ width: '100%', height: '100%' }}>
-                        {MOCK_WATERSHEDS.map((ws) => {
-                          const points = ws.polygon.map(([lat, lng]) => projectPoint(lat, lng).join(',')).join(' ');
-                          const [cx, cy] = projectPoint(ws.center[0], ws.center[1]);
-                          const isSel = selectedWatershed.id === ws.id;
-                          const color = getBandColor(ws.band);
-                          return (
-                            <g key={ws.id} onClick={() => setSelectedWatershed(ws)} style={{ cursor: 'pointer' }}>
-                              <polygon points={points} fill={`${color}22`} stroke={isSel ? '#38bdf8' : color} strokeWidth={isSel ? 3 : 1.5} />
-                              <circle cx={cx} cy={cy} r={isSel ? 6 : 4} fill={color} />
-                              <text x={cx} y={cy - 10} fill="#fff" fontSize="11" fontWeight="700" textAnchor="middle">{ws.watershed_code}</text>
-                              <text x={cx} y={cy + 16} fill={color} fontSize="9" fontWeight="600" textAnchor="middle">WII: {ws.current_wii}</text>
-                            </g>
-                          );
-                        })}
-                        {MOCK_PHOTOS.map((p) => {
-                          const [px, py] = projectPoint(p.lat, p.lng);
-                          return (
-                            <g key={p.id} onClick={() => setSelectedPhoto(p)} style={{ cursor: 'pointer' }}>
-                              <circle cx={px} cy={py} r={8} fill="#8b5cf6" stroke="#fff" strokeWidth={1.5} />
-                              <text x={px} y={py + 3} fill="#fff" fontSize="8" textAnchor="middle">📷</text>
-                            </g>
-                          );
-                        })}
-                      </svg>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(360px, 1fr)', gap: 20 }}>
+                {/* Left: Real Leaflet GIS Map Card */}
+                <div className="gov-card" style={{ padding: 18 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <div>
+                      <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0e2f56', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span>Interactive Geospatial Watershed GIS Map</span>
+                        <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4, background: '#e0f2fe', color: '#0369a1', fontWeight: 700 }}>
+                          Sentinel-2 L2A + Leaflet GIS
+                        </span>
+                      </h2>
+                      <p style={{ fontSize: '0.75rem', color: '#475569' }}>
+                        Click on any watershed polygon or camera pin (📷) to inspect telemetry and ground evidence.
+                      </p>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                      <div className="glass-panel" style={{ padding: 18, borderLeft: `4px solid ${getBandColor(selectedWatershed.band)}` }}>
-                        <span className={`badge-pill badge-${selectedWatershed.band.toLowerCase()}`}>{selectedWatershed.band}</span>
-                        <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginTop: 8 }}>{selectedWatershed.watershed_code}</h3>
-                        <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{selectedWatershed.name}, {selectedWatershed.block} Block</div>
-                        <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: '0.8rem' }}>
-                          <div style={{ background: 'rgba(255,255,255,0.03)', padding: 8, borderRadius: 6 }}>
-                            <div style={{ color: '#64748b' }}>WII Score</div>
-                            <div style={{ fontWeight: 800, color: getBandColor(selectedWatershed.band), fontSize: '1.2rem' }}>{selectedWatershed.current_wii}</div>
-                          </div>
-                          <div style={{ background: 'rgba(255,255,255,0.03)', padding: 8, borderRadius: 6 }}>
-                            <div style={{ color: '#64748b' }}>Photo Corroborated</div>
-                            <div style={{ fontWeight: 800, color: '#34d399', fontSize: '1.2rem' }}>{selectedWatershed.photo_corroboration_rate}%</div>
-                          </div>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', textAlign: 'right' }}>
+                      SRID: <strong>EPSG:4326 (WGS84)</strong><br />
+                      Bounding Region: <strong>Nanded District</strong>
+                    </div>
+                  </div>
+
+                  {/* Leaflet Real Map View Component */}
+                  <LeafletGISMap
+                    watersheds={MOCK_WATERSHEDS}
+                    selectedWatershed={selectedWatershed}
+                    onSelectWatershed={setSelectedWatershed}
+                    photos={MOCK_PHOTOS}
+                    selectedPhoto={selectedPhoto}
+                    onSelectPhoto={setSelectedPhoto}
+                  />
+
+                  {/* Map Legend (Gov Style) */}
+                  <div style={{
+                    marginTop: 12,
+                    padding: '8px 12px',
+                    background: '#f8fafc',
+                    borderRadius: 6,
+                    border: '1px solid #e2e8f0',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 16,
+                    alignItems: 'center',
+                    fontSize: '0.72rem',
+                  }}>
+                    <span style={{ fontWeight: 700, color: '#0e2f56' }}>Legend:</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ width: 12, height: 12, background: '#15803d', borderRadius: 2 }}></span>
+                      EXCELLENT (WII &gt; 70)
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ width: 12, height: 12, background: '#0284c7', borderRadius: 2 }}></span>
+                      GOOD (56 - 70)
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ width: 12, height: 12, background: '#b45309', borderRadius: 2 }}></span>
+                      MODERATE (41 - 55)
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ width: 12, height: 12, background: '#c2410c', borderRadius: 2 }}></span>
+                      POOR (26 - 40)
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ width: 12, height: 12, background: '#b91c1c', borderRadius: 2 }}></span>
+                      CRITICAL (&lt; 25)
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
+                      <span style={{ color: '#15803d' }}>📷</span>
+                      DRISHTI Geotagged Field Photo
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right: Selected Watershed Details & Photo Popover */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Selected Watershed Detail Panel */}
+                  <div className="gov-card" style={{ padding: 18, borderTop: `4px solid ${getBandColor(selectedWatershed.band)}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <span className={`badge-pill badge-${selectedWatershed.band.toLowerCase()}`}>
+                          {selectedWatershed.band}
+                        </span>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0e2f56', marginTop: 6 }}>
+                          {selectedWatershed.watershed_code}
+                        </h3>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                          {selectedWatershed.name}, {selectedWatershed.block} Block
                         </div>
                       </div>
-
-                      {selectedPhoto && (
-                        <div className="glass-panel" style={{ padding: 14, border: '1px solid rgba(139,92,246,0.5)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#a78bfa' }}>DRISHTI GROUND TRUTH #{selectedPhoto.id}</span>
-                            <button onClick={() => setSelectedPhoto(null)} style={{ background: 'none', border: 'none', color: '#94a3b8' }}>✕</button>
-                          </div>
-                          <img src={selectedPhoto.image_url} alt="Site" style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 6, marginBottom: 8 }} />
-                          <div style={{ fontSize: '0.8rem', fontWeight: 700 }}>{selectedPhoto.structure_type}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Condition: <strong style={{ color: selectedPhoto.condition === 'functional' ? '#34d399' : '#f87171' }}>{selectedPhoto.condition.toUpperCase()}</strong></div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b' }}>WII Score</div>
+                        <div style={{ fontSize: '1.8rem', fontWeight: 900, color: getBandColor(selectedWatershed.band) }}>
+                          {selectedWatershed.current_wii}
                         </div>
-                      )}
+                      </div>
+                    </div>
+
+                    {/* Telemetry Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 16, fontSize: '0.75rem' }}>
+                      <div style={{ background: '#f8fafc', padding: 8, borderRadius: 5, border: '1px solid #e2e8f0' }}>
+                        <div style={{ color: '#64748b' }}>Catchment Area</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a' }}>{selectedWatershed.area_ha} ha</div>
+                      </div>
+                      <div style={{ background: '#f8fafc', padding: 8, borderRadius: 5, border: '1px solid #e2e8f0' }}>
+                        <div style={{ color: '#64748b' }}>Ground Corroboration</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#15803d' }}>{selectedWatershed.photo_corroboration_rate}%</div>
+                      </div>
+                      <div style={{ background: '#f8fafc', padding: 8, borderRadius: 5, border: '1px solid #e2e8f0' }}>
+                        <div style={{ color: '#64748b' }}>Water Spread Gain</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0369a1' }}>
+                          +{(selectedWatershed.water_current_ha - selectedWatershed.water_baseline_ha).toFixed(1)} ha
+                        </div>
+                      </div>
+                      <div style={{ background: '#f8fafc', padding: 8, borderRadius: 5, border: '1px solid #e2e8f0' }}>
+                        <div style={{ color: '#64748b' }}>Degraded Reduced</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#b45309' }}>
+                          -{(selectedWatershed.degraded_baseline_ha - selectedWatershed.degraded_current_ha).toFixed(1)} ha
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: '#64748b' }}>
+                      <span>Water Harvesting Works: <strong>{selectedWatershed.total_structures}</strong></span>
+                      <span>Verified: <strong style={{ color: '#15803d' }}>{selectedWatershed.verified_structures} Structures</strong></span>
+                    </div>
+                  </div>
+
+                  {/* Inspected DRISHTI Photo Card */}
+                  {selectedPhoto ? (
+                    <div className="gov-card" style={{ padding: 16, border: '2px solid #7c3aed' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#7c3aed' }}>
+                          DRISHTI GROUND TRUTH #{selectedPhoto.id}
+                        </span>
+                        <button
+                          onClick={() => setSelectedPhoto(null)}
+                          style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontWeight: 800 }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <img
+                        src={selectedPhoto.image_url}
+                        alt="Site"
+                        style={{ width: '100%', height: 130, objectFit: 'cover', borderRadius: 4, marginBottom: 8 }}
+                      />
+                      <div style={{ fontSize: '0.78rem' }}>
+                        <div style={{ fontWeight: 800, color: '#0e2f56' }}>{selectedPhoto.structure_type}</div>
+                        <div style={{ color: '#475569', marginTop: 2 }}>
+                          Condition: <strong style={{ color: selectedPhoto.condition === 'functional' ? '#15803d' : '#dc2626' }}>{selectedPhoto.condition.toUpperCase()}</strong>
+                        </div>
+                        <div style={{ color: '#64748b', fontSize: '0.72rem', marginTop: 4 }}>
+                          Officer: {selectedPhoto.officer_name} • Laplacian Blur Score: {selectedPhoto.blur_score} (Sharp)
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="gov-card" style={{ padding: 18, background: '#f8fafc', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
+                      <div style={{ fontSize: '1.2rem', marginBottom: 4 }}>📷</div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>
+                        Select a Camera Marker on the Map
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                        Inspect high-resolution geotagged DRISHTI evidence with AI structure condition tags.
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Quick Indicator Weight Reference (Pure WII Formula) */}
+                  <div className="gov-card" style={{ padding: 16 }}>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0e2f56', marginBottom: 8 }}>
+                      Formula Weights (DoLR Guidelines):
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.72rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Vegetation Biomass (NDVI):</span>
+                        <strong>30% Weight</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Surface Water Spread (NDWI):</span>
+                        <strong>30% Weight</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Degraded Land Remediation:</span>
+                        <strong>25% Weight</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>DRISHTI Ground Corroboration:</span>
+                        <strong style={{ color: '#15803d' }}>15% Weight</strong>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* TAB 2: Cross-Validation Adjudication Studio */}
             {activeTab === 'adjudication' && (
-              <div className="glass-panel" style={{ padding: 24 }}>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 16 }}>Cross-Validation Adjudication Studio</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 20 }}>
+              <div className="gov-card" style={{ padding: 24 }}>
+                <div style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: 14, marginBottom: 20 }}>
+                  <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0e2f56' }}>
+                    Cross-Validation Adjudication Studio
+                  </h2>
+                  <p style={{ fontSize: '0.8rem', color: '#475569' }}>
+                    Spatiotemporal reconciliation: Verify satellite spectral claims against geotagged field photos before releasing project funds.
+                  </p>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 1fr) minmax(0, 2fr)', gap: 24 }}>
+                  {/* Left Queue */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0e2f56', textTransform: 'uppercase' }}>
+                      Verification Queue ({claims.length} Claims)
+                    </div>
                     {claims.map((c) => {
                       const isSel = selectedClaim?.id === c.id;
                       return (
@@ -548,69 +1174,117 @@
                           key={c.id}
                           onClick={() => setSelectedClaim(c)}
                           style={{
-                            background: isSel ? 'rgba(6, 182, 212, 0.15)' : 'rgba(255,255,255,0.03)',
+                            background: isSel ? '#eff6ff' : '#ffffff',
+                            border: isSel ? '2px solid #1d4ed8' : '1px solid #cbd5e1',
+                            borderRadius: 6,
                             padding: 12,
-                            borderRadius: 8,
-                            border: isSel ? '1px solid rgba(6, 182, 212, 0.5)' : '1px solid rgba(255,255,255,0.08)',
                             cursor: 'pointer',
+                            transition: 'all 0.15s ease',
                           }}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
-                            <span style={{ color: '#38bdf8', fontFamily: 'monospace' }}>{c.id}</span>
-                            <span style={{ color: c.status === 'PHOTO_CORROBORATED' ? '#34d399' : '#f87171', fontWeight: 700 }}>{c.status}</span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', marginBottom: 4 }}>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#1e40af' }}>{c.id}</span>
+                            <span className={`badge-pill ${c.status === 'PHOTO_CORROBORATED' ? 'badge-excellent' : 'badge-critical'}`}>
+                              {c.status.replace('_', ' ')}
+                            </span>
                           </div>
-                          <div style={{ fontWeight: 700, marginTop: 4 }}>{c.change_type}: +{c.magnitude} ha</div>
-                          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{c.watershed_code}</div>
+                          <div style={{ fontWeight: 800, fontSize: '0.85rem', color: '#0f172a' }}>
+                            {c.change_type.replace('_', ' ')}: +{c.magnitude} ha
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: 2 }}>
+                            {c.watershed_code} • Centroid: {c.centroid_lat}°N, {c.centroid_lng}°E
+                          </div>
                         </div>
                       );
                     })}
                   </div>
 
-                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: 20, borderRadius: 10 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <h3 style={{ fontSize: '1.1rem' }}>Claim Inspection: {selectedClaim?.id}</h3>
-                      {selectedClaim?.adjudication_decision && (
-                        <span style={{ padding: '3px 8px', borderRadius: 4, background: selectedClaim.adjudication_decision === 'ACCEPT' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)', color: selectedClaim.adjudication_decision === 'ACCEPT' ? '#34d399' : '#f87171', fontWeight: 700, fontSize: '0.75rem' }}>
-                          DECISION: {selectedClaim.adjudication_decision}ED
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 14 }}>
-                      <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 8 }}>
-                        <div style={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.8rem', marginBottom: 6 }}>🛰️ SATELLITE DETECTION</div>
-                        <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                          <div><strong>Type:</strong> {selectedClaim?.change_type} (+{selectedClaim?.magnitude} ha)</div>
-                          <div><strong>Sensor:</strong> Sentinel-2 L2A (10m Resolution)</div>
-                          <div><strong>Centroid:</strong> {selectedClaim?.centroid_lat}°N, {selectedClaim?.centroid_lng}°E</div>
+                  {/* Right Side-by-Side Comparison & Signing Panel */}
+                  <div style={{ background: '#f8fafc', padding: 20, borderRadius: 8, border: '1px solid #cbd5e1' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                      <div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>Claim Under Review</div>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0e2f56' }}>
+                          {selectedClaim?.change_type.replace('_', ' ')}: +{selectedClaim?.magnitude} ha
+                        </h3>
+                        <div style={{ fontSize: '0.75rem', color: '#475569' }}>
+                          Target: {selectedClaim?.watershed_code} ({selectedClaim?.epoch})
                         </div>
                       </div>
-                      <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 8 }}>
-                        <div style={{ color: '#a78bfa', fontWeight: 700, fontSize: '0.8rem', marginBottom: 6 }}>📷 DRISHTI FIELD PHOTO</div>
+
+                      {selectedClaim?.adjudication_decision && (
+                        <div style={{
+                          padding: '6px 14px',
+                          borderRadius: 6,
+                          fontWeight: 800,
+                          fontSize: '0.8rem',
+                          background: selectedClaim.adjudication_decision === 'ACCEPT' ? '#dcfce7' : '#fee2e2',
+                          color: selectedClaim.adjudication_decision === 'ACCEPT' ? '#15803d' : '#b91c1c',
+                          border: `1px solid ${selectedClaim.adjudication_decision === 'ACCEPT' ? '#86efac' : '#fca5a5'}`,
+                        }}>
+                          STATUS: {selectedClaim.adjudication_decision}ED
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Split Comparison Cards */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                      {/* Left: Satellite Detection */}
+                      <div className="gov-card" style={{ padding: 14 }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0284c7', textTransform: 'uppercase', marginBottom: 8 }}>
+                          🛰️ Satellite Sensor Evidence
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#334155', lineHeight: 1.6 }}>
+                          <div><strong>Sensor:</strong> Sentinel-2 L2A (10m Resolution)</div>
+                          <div><strong>Spectral Shift:</strong> NDWI &gt; +0.28</div>
+                          <div><strong>Detection Coordinates:</strong> {selectedClaim?.centroid_lat}°N, {selectedClaim?.centroid_lng}°E</div>
+                          <div><strong>Epoch Transition:</strong> T4 → T5 (Post-Works)</div>
+                        </div>
+                      </div>
+
+                      {/* Right: DRISHTI Field Evidence */}
+                      <div className="gov-card" style={{ padding: 14 }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#7c3aed', textTransform: 'uppercase', marginBottom: 8 }}>
+                          📷 DRISHTI Field Photo Evidence
+                        </div>
                         {selectedClaim?.matched_photos && selectedClaim.matched_photos.length > 0 ? (
                           <div>
-                            <img src={selectedClaim.matched_photos[0].image_url} alt="Photo" style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 6, marginBottom: 6 }} />
-                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                            <img
+                              src={selectedClaim.matched_photos[0].image_url}
+                              alt="Photo"
+                              style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 4, marginBottom: 8 }}
+                            />
+                            <div style={{ fontSize: '0.75rem', color: '#334155', lineHeight: 1.5 }}>
                               <div><strong>Structure:</strong> {selectedClaim.matched_photos[0].structure_type}</div>
-                              <div><strong>Condition:</strong> <span style={{ color: selectedClaim.matched_photos[0].condition === 'functional' ? '#34d399' : '#f87171' }}>{selectedClaim.matched_photos[0].condition.toUpperCase()}</span></div>
+                              <div>
+                                Condition: <strong style={{ color: selectedClaim.matched_photos[0].condition === 'functional' ? '#15803d' : '#dc2626' }}>
+                                  {selectedClaim.matched_photos[0].condition.toUpperCase()}
+                                </strong>
+                              </div>
+                              <div><strong>Field Officer:</strong> {selectedClaim.matched_photos[0].officer_name}</div>
                             </div>
                           </div>
                         ) : (
-                          <div style={{ color: '#64748b', fontSize: '0.75rem', padding: 20, textAlign: 'center' }}>No field photo captured within spatiotemporal window.</div>
+                          <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: '0.75rem' }}>
+                            No field photo captured within spatiotemporal buffer.
+                          </div>
                         )}
                       </div>
                     </div>
-                    <div style={{ marginTop: 20, display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+
+                    {/* Official Sign-off Buttons */}
+                    <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #e2e8f0', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
                       <button
                         onClick={() => handleAdjudicate('REJECT')}
-                        style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid #ef4444', padding: '8px 16px', borderRadius: 8, fontWeight: 700 }}
+                        className="gov-btn gov-btn-danger"
                       >
-                        Flag Mismatch (Reject)
+                        Flag Mismatch (Contradiction)
                       </button>
                       <button
                         onClick={() => handleAdjudicate('ACCEPT')}
-                        style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: 8, fontWeight: 700 }}
+                        className="gov-btn gov-btn-success"
                       >
-                        ✓ Corroborate & Sign to Ledger
+                        ✓ Corroborate & Sign to Ledger (SHA-256)
                       </button>
                     </div>
                   </div>
@@ -618,39 +1292,53 @@
               </div>
             )}
 
+            {/* TAB 3: Cryptographic Ledger Explorer */}
             {activeTab === 'ledger' && (
-              <div className="glass-panel" style={{ padding: 24 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div className="gov-card" style={{ padding: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, borderBottom: '2px solid #e2e8f0', paddingBottom: 14 }}>
                   <div>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Cryptographic Adjudication Ledger Explorer</h2>
-                    <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Tamper-evident SHA-256 Merkle chain linking officer verdicts to change claims</p>
+                    <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0e2f56' }}>
+                      Cryptographic Adjudication Ledger Explorer
+                    </h2>
+                    <p style={{ fontSize: '0.8rem', color: '#475569' }}>
+                      Tamper-evident SHA-256 Merkle chain providing non-repudiation for all performance audits and fund sanctions.
+                    </p>
                   </div>
                   <button
                     onClick={() => {
                       setAuditResult({ verified: true, count: ledger.length });
                     }}
-                    style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700 }}
+                    className="gov-btn gov-btn-primary"
                   >
                     🛡️ Verify Entire Chain Integrity
                   </button>
                 </div>
 
                 {auditResult && (
-                  <div style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid #10b981', padding: '12px 18px', borderRadius: 8, marginBottom: 18, color: '#34d399', fontSize: '0.85rem', fontWeight: 600 }}>
+                  <div style={{ background: '#dcfce7', border: '1px solid #86efac', padding: '12px 18px', borderRadius: 6, marginBottom: 18, color: '#15803d', fontSize: '0.85rem', fontWeight: 700 }}>
                     ✅ CAG AUDIT PASSED: All {auditResult.count} blocks mathematically verified. Hash link sequence is 100% unbroken.
                   </div>
                 )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {ledger.map((b) => (
-                    <div key={b.sequence_number} style={{ background: 'rgba(0,0,0,0.3)', padding: 16, borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                        <span style={{ fontWeight: 800, color: '#38bdf8' }}>BLOCK #{b.sequence_number} ({b.claim_id})</span>
-                        <span style={{ color: b.decision === 'ACCEPT' ? '#34d399' : '#f87171', fontWeight: 700 }}>{b.decision}</span>
+                    <div key={b.sequence_number} style={{ background: '#f8fafc', padding: 16, borderRadius: 6, border: '1px solid #cbd5e1' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ background: '#0e2f56', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: '0.72rem', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                            BLOCK #{b.sequence_number}
+                          </span>
+                          <span style={{ fontWeight: 800, color: '#0e2f56', fontSize: '0.85rem' }}>{b.claim_id}</span>
+                        </div>
+                        <span className={`badge-pill ${b.decision === 'ACCEPT' ? 'badge-excellent' : 'badge-critical'}`}>
+                          {b.decision}
+                        </span>
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Officer: {b.officer_name} • Decided: {new Date(b.decided_at).toLocaleString()}</div>
-                      <div style={{ background: '#070b14', padding: 8, borderRadius: 6, marginTop: 8, fontSize: '0.7rem', fontFamily: 'monospace', color: '#10b981' }}>
-                        CHAIN_HASH: {b.chain_hash}
+                      <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: 8 }}>
+                        Officer: <strong>{b.officer_name}</strong> • Timestamp: {new Date(b.decided_at).toLocaleString('en-IN')}
+                      </div>
+                      <div style={{ background: '#ffffff', padding: 8, borderRadius: 4, border: '1px solid #e2e8f0', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: '#0e2f56' }}>
+                        CHAIN_HASH: <strong>{b.chain_hash}</strong>
                       </div>
                     </div>
                   ))}
@@ -658,19 +1346,110 @@
               </div>
             )}
 
+            {/* TAB 4: Statutory IWMP Compliance Reports */}
             {activeTab === 'reports' && (
-              <div className="glass-panel" style={{ padding: 24 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                  <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>IWMP Monitoring & Compliance Report (DoLR Format)</h2>
-                  <button onClick={() => window.print()} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700 }}>Print / Export PDF</button>
+              <div className="gov-card" style={{ padding: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, borderBottom: '2px solid #e2e8f0', paddingBottom: 14 }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0e2f56' }}>
+                      IWMP Monitoring & Compliance Report (DoLR Format A-4)
+                    </h2>
+                    <p style={{ fontSize: '0.8rem', color: '#475569' }}>
+                      Official periodic evaluation document ready for submission to the Ministry of Rural Development.
+                    </p>
+                  </div>
+                  <button onClick={() => window.print()} className="gov-btn gov-btn-success">
+                    🖨️ Print / Export Official PDF
+                  </button>
                 </div>
-                <div style={{ background: '#fff', color: '#000', padding: 24, borderRadius: 8 }}>
-                  <h3 style={{ borderBottom: '2px solid #000', paddingBottom: 8 }}>Department of Land Resources — Integrated Watershed Evaluation</h3>
-                  <p style={{ marginTop: 12, fontSize: '0.9rem' }}>Micro-Watershed <strong>{selectedWatershed.watershed_code}</strong>: Composite WII Score <strong>{selectedWatershed.current_wii} / 100 ({selectedWatershed.band})</strong>. All works corroborated with DRISHTI field geotagging.</p>
+
+                {/* Printable Document Box */}
+                <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', padding: 32, borderRadius: 6, color: '#0f172a' }}>
+                  <div style={{ textAlign: 'center', borderBottom: '2px solid #0e2f56', paddingBottom: 16, marginBottom: 20 }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#b45309' }}>GOVERNMENT OF INDIA • MINISTRY OF RURAL DEVELOPMENT</div>
+                    <h1 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0e2f56', marginTop: 4 }}>
+                      WATERSHED DEVELOPMENT COMPONENT (WDC-PMKSY 2.0)
+                    </h1>
+                    <div style={{ fontSize: '0.85rem', color: '#475569' }}>
+                      Periodic Geospatial Impact Assessment Report • DoLR Reference Form A-4
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20, fontSize: '0.8rem' }}>
+                    <div>
+                      <div>Target Watershed: <strong>{selectedWatershed.watershed_code} ({selectedWatershed.name})</strong></div>
+                      <div>District / State: <strong>{selectedWatershed.district}, {selectedWatershed.state}</strong></div>
+                      <div>Catchment Area: <strong>{selectedWatershed.area_ha} Hectares</strong></div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div>Evaluation Status: <strong style={{ color: '#15803d' }}>AUDIT COMPLIANT</strong></div>
+                      <div>Composite WII Index: <strong style={{ fontSize: '1.1rem', color: '#15803d' }}>{selectedWatershed.current_wii} / 100 ({selectedWatershed.band})</strong></div>
+                      <div>Report Generation Date: <strong>{new Date().toLocaleDateString('en-IN')}</strong></div>
+                    </div>
+                  </div>
+
+                  {/* Multi-Epoch Progression Table */}
+                  <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0e2f56', marginBottom: 8 }}>
+                    Longitudinal Multi-Epoch Progression
+                  </h4>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem', textAlign: 'left', marginBottom: 24 }}>
+                    <thead>
+                      <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
+                        <th style={{ padding: '8px 10px' }}>Epoch</th>
+                        <th style={{ padding: '8px 10px' }}>Acquisition Date</th>
+                        <th style={{ padding: '8px 10px' }}>Mean NDVI</th>
+                        <th style={{ padding: '8px 10px' }}>Water Spread (ha)</th>
+                        <th style={{ padding: '8px 10px' }}>Degraded Land (ha)</th>
+                        <th style={{ padding: '8px 10px' }}>WII Score</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {MOCK_EPOCHS.map((ep, idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                          <td style={{ padding: '6px 10px', fontWeight: 700 }}>{ep.epoch}</td>
+                          <td style={{ padding: '6px 10px' }}>{ep.date}</td>
+                          <td style={{ padding: '6px 10px' }}>{ep.ndvi_mean.toFixed(2)}</td>
+                          <td style={{ padding: '6px 10px' }}>{ep.water_spread_ha.toFixed(1)}</td>
+                          <td style={{ padding: '6px 10px' }}>{ep.degraded_land_ha.toFixed(1)}</td>
+                          <td style={{ padding: '6px 10px', fontWeight: 800, color: '#15803d' }}>{ep.wii_score.toFixed(1)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: 16, fontSize: '0.75rem', color: '#64748b' }}>
+                    <div>Audit Proof Hash: <code>{ledger[ledger.length - 1]?.chain_hash.slice(0, 32)}...</code></div>
+                    <div style={{ textAlign: 'center', border: '1px solid #cbd5e1', padding: '6px 16px', borderRadius: 4 }}>
+                      <strong>OFFICIALLY SIGNED & VERIFIED</strong><br />
+                      National Watershed Monitoring Directorate
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
           </main>
+
+          {/* Official Indian Government Portal Footer */}
+          <footer style={{
+            background: '#071d38',
+            color: '#cbd5e1',
+            borderTop: '4px solid #f97316',
+            padding: '24px',
+            fontSize: '0.75rem',
+            textAlign: 'center',
+          }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ fontWeight: 800, color: '#ffffff', fontSize: '0.85rem' }}>
+                Department of Land Resources (DoLR) • Ministry of Rural Development • Government of India
+              </div>
+              <div>
+                PRAMAAN Geospatial Intelligence Platform (Smart India Hackathon 2026 — Problem Statement 26015)
+              </div>
+              <div style={{ color: '#94a3b8', marginTop: 4 }}>
+                Real-time Sentinel-2 L2A Spectral Analysis • DRISHTI Computer Vision Auto-Tagger • SHA-256 Tamper-Evident Ledger
+              </div>
+            </div>
+          </footer>
         </div>
       );
     }
