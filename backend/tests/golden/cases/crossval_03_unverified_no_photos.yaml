@@ -1,0 +1,24 @@
+# Golden case: UNVERIFIED — satellite sees vegetation increase, no photos in window
+name: crossval_03_unverified_no_photos_in_window
+description: >
+  Satellite claims +18% vegetation increase. No DRISHTI photos exist within 500m
+  of the change centroid. Expected: UNVERIFIED (not FLAGGED — absence ≠ contradiction).
+
+claim:
+  claim_id: "CLM-003"
+  watershed_id: "IWMP-14-MW12"
+  epoch: "T4"
+  change_type: "VEGETATION_INCREASE"
+  magnitude: 18.0
+  centroid_lat: 18.55
+  centroid_lon: 77.08
+
+photos: []  # No photos in the spatial/temporal window
+
+spatial_buffer_m: 500.0
+temporal_window_days: 90
+
+expected:
+  outcome: "UNVERIFIED"
+  corroborating_count: 0
+  contradicting_count: 0

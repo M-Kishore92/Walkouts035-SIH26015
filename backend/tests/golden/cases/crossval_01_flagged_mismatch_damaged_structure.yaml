@@ -1,0 +1,30 @@
+# Golden case: FLAGGED_MISMATCH — satellite says water increased, photo says damaged dam
+name: crossval_01_flagged_mismatch_damaged_structure
+description: >
+  Satellite claims +12ha water body increase. The only photo in the area shows
+  a damaged/silted check dam. Expected: FLAGGED_MISMATCH.
+
+claim:
+  claim_id: "CLM-001"
+  watershed_id: "IWMP-14-MW07"
+  epoch: "T3"
+  change_type: "WATER_INCREASE"
+  magnitude: 12.4
+  centroid_lat: 18.35
+  centroid_lon: 77.31
+
+photos:
+  - photo_id: "DRSHT-2026-AA1234"
+    structure_type: "check_dam"
+    condition: "silted"
+    confidence: 0.87
+    distance_m: 120.0
+    days_from_epoch: 14
+
+spatial_buffer_m: 500.0
+temporal_window_days: 90
+
+expected:
+  outcome: "FLAGGED_MISMATCH"
+  corroborating_count: 0
+  contradicting_count: 1

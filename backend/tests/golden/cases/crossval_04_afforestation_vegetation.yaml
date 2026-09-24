@@ -1,0 +1,30 @@
+# Golden case: PHOTO_CORROBORATED — afforestation plantation confirms vegetation increase
+name: crossval_04_afforestation_vegetation
+description: >
+  Satellite claims +15.5ha vegetation increase. Field photo confirms active afforestation
+  plantation within 180m. Expected: PHOTO_CORROBORATED.
+
+claim:
+  claim_id: "CLM-004"
+  watershed_id: "IWMP-14-MW02"
+  epoch: "T4"
+  change_type: "VEGETATION_INCREASE"
+  magnitude: 15.5
+  centroid_lat: 18.39
+  centroid_lon: 77.34
+
+photos:
+  - photo_id: "DRSHT-2026-AF9012"
+    structure_type: "plantation"
+    condition: "functional"
+    confidence: 0.92
+    distance_m: 180.0
+    days_from_epoch: 20
+
+spatial_buffer_m: 500.0
+temporal_window_days: 90
+
+expected:
+  outcome: "PHOTO_CORROBORATED"
+  corroborating_count: 1
+  contradicting_count: 0

@@ -1,0 +1,36 @@
+# Golden case: MODERATE band — steady average improvement across indicators
+name: wii_moderate_mixed
+description: >
+  Latur MW-04: Average vegetation and water retention, partially corroborated.
+  Expected: MODERATE band.
+
+delta:
+  watershed_id: "IWMP-09-MW04"
+  epoch_from: "T1"
+  epoch_to: "T2"
+  delta_ndvi: 0.00
+  delta_water_spread_ha: 0.0
+  delta_degraded_land_ha: 0.0
+  cloud_cover_fraction: 0.12
+
+photo_validation:
+  watershed_id: "IWMP-09-MW04"
+  epoch: "T2"
+  total_satellite_claims: 4
+  corroborated_claims: 2
+  contradicted_claims: 0
+  unverified_claims: 2
+  flagged_mismatches: 0
+
+cohort:
+  ndvi_delta_min: -0.30
+  ndvi_delta_max: 0.30
+  water_delta_ha_min: -50.0
+  water_delta_ha_max: 50.0
+  degraded_delta_ha_min: -100.0
+  degraded_delta_ha_max: 100.0
+
+expected:
+  band: "MODERATE"
+  wii_score: 53.75
+  cloud_cover_warning: false

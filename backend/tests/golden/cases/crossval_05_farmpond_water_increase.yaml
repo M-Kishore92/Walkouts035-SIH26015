@@ -1,0 +1,30 @@
+# Golden case: PHOTO_CORROBORATED — functional farm pond confirms water increase
+name: crossval_05_farmpond_water_increase
+description: >
+  Satellite claims +6.8ha water body increase. Functional farm pond documented within 95m.
+  Expected: PHOTO_CORROBORATED.
+
+claim:
+  claim_id: "CLM-005"
+  watershed_id: "IWMP-14-MW07"
+  epoch: "T4"
+  change_type: "WATER_INCREASE"
+  magnitude: 6.8
+  centroid_lat: 18.36
+  centroid_lon: 77.32
+
+photos:
+  - photo_id: "DRSHT-2026-FP4567"
+    structure_type: "farm_pond"
+    condition: "functional"
+    confidence: 0.89
+    distance_m: 95.0
+    days_from_epoch: 12
+
+spatial_buffer_m: 500.0
+temporal_window_days: 90
+
+expected:
+  outcome: "PHOTO_CORROBORATED"
+  corroborating_count: 1
+  contradicting_count: 0

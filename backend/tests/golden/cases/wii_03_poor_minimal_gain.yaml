@@ -1,0 +1,36 @@
+# Golden case: POOR band — minimal positive change, sparse photo confirmation
+name: wii_poor_minimal_gain
+description: >
+  Beed MW-12: Small NDVI gain, water spread unchanged, degraded land barely moved.
+  Expected: POOR band.
+
+delta:
+  watershed_id: "IWMP-06-MW12"
+  epoch_from: "T1"
+  epoch_to: "T2"
+  delta_ndvi: -0.12
+  delta_water_spread_ha: -12.0
+  delta_degraded_land_ha: 20.0
+  cloud_cover_fraction: 0.15
+
+photo_validation:
+  watershed_id: "IWMP-06-MW12"
+  epoch: "T2"
+  total_satellite_claims: 4
+  corroborated_claims: 1
+  contradicted_claims: 1
+  unverified_claims: 2
+  flagged_mismatches: 1
+
+cohort:
+  ndvi_delta_min: -0.30
+  ndvi_delta_max: 0.30
+  water_delta_ha_min: -50.0
+  water_delta_ha_max: 50.0
+  degraded_delta_ha_min: -100.0
+  degraded_delta_ha_max: 100.0
+
+expected:
+  band: "POOR"
+  wii_score: 34.5
+  cloud_cover_warning: false

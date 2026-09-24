@@ -1,0 +1,36 @@
+# Golden case: GOOD band — solid watershed recovery across all vectors
+name: wii_good_steady_progress
+description: >
+  Nanded MW-02: Consistent growth in vegetation cover, enhanced storage capacity.
+  Expected: GOOD band.
+
+delta:
+  watershed_id: "IWMP-14-MW02"
+  epoch_from: "T3"
+  epoch_to: "T4"
+  delta_ndvi: 0.12
+  delta_water_spread_ha: 15.0
+  delta_degraded_land_ha: -30.0
+  cloud_cover_fraction: 0.08
+
+photo_validation:
+  watershed_id: "IWMP-14-MW02"
+  epoch: "T4"
+  total_satellite_claims: 5
+  corroborated_claims: 3
+  contradicted_claims: 0
+  unverified_claims: 2
+  flagged_mismatches: 0
+
+cohort:
+  ndvi_delta_min: -0.30
+  ndvi_delta_max: 0.30
+  water_delta_ha_min: -50.0
+  water_delta_ha_max: 50.0
+  degraded_delta_ha_min: -100.0
+  degraded_delta_ha_max: 100.0
+
+expected:
+  band: "GOOD"
+  wii_score: 68.75
+  cloud_cover_warning: false

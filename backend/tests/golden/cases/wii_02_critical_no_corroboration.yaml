@@ -1,0 +1,36 @@
+# Golden case: CRITICAL band — all indicators degrading, no photo evidence
+name: wii_critical_no_corroboration
+description: >
+  Osmanabad MW-03: All satellite indicators show degradation, zero photos exist.
+  Expected: CRITICAL.
+
+delta:
+  watershed_id: "IWMP-08-MW03"
+  epoch_from: "T3"
+  epoch_to: "T4"
+  delta_ndvi: -0.25
+  delta_water_spread_ha: -38.0
+  delta_degraded_land_ha: 90.0
+  cloud_cover_fraction: 0.10
+
+photo_validation:
+  watershed_id: "IWMP-08-MW03"
+  epoch: "T4"
+  total_satellite_claims: 5
+  corroborated_claims: 0
+  contradicted_claims: 0
+  unverified_claims: 5
+  flagged_mismatches: 0
+
+cohort:
+  ndvi_delta_min: -0.30
+  ndvi_delta_max: 0.30
+  water_delta_ha_min: -50.0
+  water_delta_ha_max: 50.0
+  degraded_delta_ha_min: -100.0
+  degraded_delta_ha_max: 100.0
+
+expected:
+  band: "CRITICAL"
+  wii_score: 8.0
+  cloud_cover_warning: false

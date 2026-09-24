@@ -1,0 +1,36 @@
+# Golden case: PHOTO_CORROBORATED — functional check dam confirms water increase
+name: crossval_02_photo_corroborated_functional_checkdam
+description: >
+  Satellite claims +8.2ha water body increase. Two functional check dams
+  photographed within 300m. Expected: PHOTO_CORROBORATED.
+
+claim:
+  claim_id: "CLM-002"
+  watershed_id: "IWMP-14-MW09"
+  epoch: "T3"
+  change_type: "WATER_INCREASE"
+  magnitude: 8.2
+  centroid_lat: 18.42
+  centroid_lon: 77.22
+
+photos:
+  - photo_id: "DRSHT-2026-BB5678"
+    structure_type: "check_dam"
+    condition: "functional"
+    confidence: 0.93
+    distance_m: 280.0
+    days_from_epoch: 30
+  - photo_id: "DRSHT-2026-BB5679"
+    structure_type: "percolation_tank"
+    condition: "functional"
+    confidence: 0.88
+    distance_m: 180.0
+    days_from_epoch: 15
+
+spatial_buffer_m: 500.0
+temporal_window_days: 90
+
+expected:
+  outcome: "PHOTO_CORROBORATED"
+  corroborating_count: 2
+  contradicting_count: 0

@@ -1,0 +1,177 @@
+version: "3.9"
+
+name: dummy-sih26015
+
+services:
+  # ── PostGIS ──────────────────────────────────────────────────────────────
+  db:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: watershed_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: watershed
+      POSTGRES_PASSWORD: watershed_dev
+      POSTGRES_DB: watershed
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U watershed"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Redis ────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: watershed_redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── MinIO (S3-compatible object store for COGs & photos) ─────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: watershed_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── API (FastAPI) ─────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: watershed_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://watershed:watershed_dev@db:5432/watershed"
+      REDIS_URL: "redis://redis:6379/0"
+      MINIO_ENDPOINT: "minio:9000"
+      MINIO_ACCESS_KEY: "minioadmin"
+      MINIO_SECRET_KEY: "minioadmin123"
+      MINIO_BUCKET: "watershed-photos"
+      SECRET_KEY: "dev-secret-key-change-in-production-32chars"
+      ENVIRONMENT: "development"
+      LOG_LEVEL: "INFO"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app:ro
+      - ./scripts:/app/scripts:ro
+      - ./tests:/app/tests:ro
+      - ./db:/app/db:ro
+      - ./ml/models:/app/ml/models:ro
+    command: >
+      sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Celery Worker ─────────────────────────────────────────────────────────
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: watershed_worker
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://watershed:watershed_dev@db:5432/watershed"
+      REDIS_URL: "redis://redis:6379/0"
+      MINIO_ENDPOINT: "minio:9000"
+      MINIO_ACCESS_KEY: "minioadmin"
+      MINIO_SECRET_KEY: "minioadmin123"
+      MINIO_BUCKET: "watershed-photos"
+      SECRET_KEY: "dev-secret-key-change-in-production-32chars"
+      ENVIRONMENT: "development"
+      LOG_LEVEL: "INFO"
+    volumes:
+      - ./backend:/app:ro
+      - ./ml/models:/app/ml/models:ro
+    command: >
+      sh -c "celery -A app.workers.celery_app worker --loglevel=info -Q fast,satellite -c 4"
+
+  # ── Celery Beat (Scheduled Tasks) ─────────────────────────────────────────
+  beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: watershed_beat
+    restart: unless-stopped
+    depends_on:
+      - worker
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://watershed:watershed_dev@db:5432/watershed"
+      REDIS_URL: "redis://redis:6379/0"
+      SECRET_KEY: "dev-secret-key-change-in-production-32chars"
+    volumes:
+      - ./backend:/app:ro
+    command: >
+      sh -c "celery -A app.workers.celery_app beat --loglevel=info"
+
+  # ── TiTiler (COG tile server) ─────────────────────────────────────────────
+  titiler:
+    image: ghcr.io/developmentseed/titiler:latest
+    container_name: watershed_titiler
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      CPL_VSIL_CURL_ALLOWED_EXTENSIONS: ".tif,.tiff,.vrt,.ovr"
+      GDAL_CACHEMAX: "512"
+      VSI_CACHE: "TRUE"
+
+  # ── Frontend (Vite + React) ───────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: watershed_frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src:ro
+      - ./frontend/public:/app/public:ro
+    environment:
+      VITE_API_URL: "http://localhost:8000"
+      VITE_TITILER_URL: "http://localhost:8080"
+
+volumes:
+  pg_data:
+  minio_data:

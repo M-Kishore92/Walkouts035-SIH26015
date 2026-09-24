@@ -1,0 +1,35 @@
+# Golden case: High cloud cover triggers warning flag in engine
+name: wii_high_cloud_cover_warning
+description: >
+  Nanded MW-02 under monsoon cloud cover (>50%). Expect cloud cover warning.
+
+delta:
+  watershed_id: "IWMP-14-MW02"
+  epoch_from: "T2"
+  epoch_to: "T3"
+  delta_ndvi: 0.12
+  delta_water_spread_ha: 15.0
+  delta_degraded_land_ha: -30.0
+  cloud_cover_fraction: 0.65
+
+photo_validation:
+  watershed_id: "IWMP-14-MW02"
+  epoch: "T3"
+  total_satellite_claims: 5
+  corroborated_claims: 3
+  contradicted_claims: 0
+  unverified_claims: 2
+  flagged_mismatches: 0
+
+cohort:
+  ndvi_delta_min: -0.30
+  ndvi_delta_max: 0.30
+  water_delta_ha_min: -50.0
+  water_delta_ha_max: 50.0
+  degraded_delta_ha_min: -100.0
+  degraded_delta_ha_max: 100.0
+
+expected:
+  band: "GOOD"
+  wii_score: 68.75
+  cloud_cover_warning: true
