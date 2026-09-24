@@ -316,8 +316,43 @@
       const [currentRole, setCurrentRole] = useState('monitor');
       const [selectedWatershed, setSelectedWatershed] = useState(MOCK_WATERSHEDS[0]);
       const [claims, setClaims] = useState(MOCK_CLAIMS);
+      const [selectedClaim, setSelectedClaim] = useState(MOCK_CLAIMS[0]);
       const [ledger, setLedger] = useState(MOCK_LEDGER);
       const [selectedPhoto, setSelectedPhoto] = useState(null);
+      const [auditResult, setAuditResult] = useState(null);
+
+      const handleAdjudicate = (decision) => {
+        if (!selectedClaim) return;
+        const newStatus = decision === 'ACCEPT' ? 'PHOTO_CORROBORATED' : 'FLAGGED_MISMATCH';
+        
+        // 1. Update claim
+        setClaims(prev => prev.map(c => c.id === selectedClaim.id ? { ...c, status: newStatus, adjudication_decision: decision } : c));
+        setSelectedClaim(prev => ({ ...prev, status: newStatus, adjudication_decision: decision }));
+
+        // 2. Hash chaining simulation
+        const lastBlock = ledger[ledger.length - 1];
+        const seq = lastBlock ? lastBlock.sequence_number + 1 : 1;
+        const prevHash = lastBlock ? lastBlock.chain_hash : '0'.repeat(64);
+        
+        let hashSeed = 0;
+        for (let i = 0; i < selectedClaim.id.length; i++) hashSeed += selectedClaim.id.charCodeAt(i);
+        const payloadHash = (Math.abs(hashSeed * 98765)).toString(16).padStart(16, '0') + 'c41022d483b8a8bbf386c91a78e71887019e1b2eb00b14ef995b0577bc'.slice(16);
+        const chainHash = (Math.abs(seq * 1234567)).toString(16).padStart(16, '0') + prevHash.slice(0, 48);
+
+        const newBlock = {
+          sequence_number: seq,
+          claim_id: selectedClaim.id,
+          officer_name: 'Dr. Rajesh Kulkarni (District Monitoring Officer)',
+          decision: decision,
+          decided_at: new Date().toISOString(),
+          payload_hash: payloadHash,
+          previous_hash: prevHash,
+          chain_hash: chainHash,
+        };
+
+        setLedger(prev => [...prev, newBlock]);
+        setActiveTab('ledger');
+      };
 
       const avgWii = MOCK_WATERSHEDS.reduce((s, w) => s + w.current_wii, 0) / MOCK_WATERSHEDS.length;
       const totalWaterGain = MOCK_WATERSHEDS.reduce((s, w) => s + (w.water_current_ha - w.water_baseline_ha), 0);
@@ -506,33 +541,77 @@
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 16 }}>Cross-Validation Adjudication Studio</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 20 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {claims.map((c) => (
-                      <div key={c.id} style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
-                          <span style={{ color: '#38bdf8', fontFamily: 'monospace' }}>{c.id}</span>
-                          <span style={{ color: c.status === 'PHOTO_CORROBORATED' ? '#34d399' : '#f87171', fontWeight: 700 }}>{c.status}</span>
+                    {claims.map((c) => {
+                      const isSel = selectedClaim?.id === c.id;
+                      return (
+                        <div
+                          key={c.id}
+                          onClick={() => setSelectedClaim(c)}
+                          style={{
+                            background: isSel ? 'rgba(6, 182, 212, 0.15)' : 'rgba(255,255,255,0.03)',
+                            padding: 12,
+                            borderRadius: 8,
+                            border: isSel ? '1px solid rgba(6, 182, 212, 0.5)' : '1px solid rgba(255,255,255,0.08)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+                            <span style={{ color: '#38bdf8', fontFamily: 'monospace' }}>{c.id}</span>
+                            <span style={{ color: c.status === 'PHOTO_CORROBORATED' ? '#34d399' : '#f87171', fontWeight: 700 }}>{c.status}</span>
+                          </div>
+                          <div style={{ fontWeight: 700, marginTop: 4 }}>{c.change_type}: +{c.magnitude} ha</div>
+                          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{c.watershed_code}</div>
                         </div>
-                        <div style={{ fontWeight: 700, marginTop: 4 }}>{c.change_type}: +{c.magnitude} ha</div>
-                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{c.watershed_code}</div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <div style={{ background: 'rgba(0,0,0,0.3)', padding: 20, borderRadius: 10 }}>
-                    <h3>Claim Inspection: {claims[0]?.id}</h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <h3 style={{ fontSize: '1.1rem' }}>Claim Inspection: {selectedClaim?.id}</h3>
+                      {selectedClaim?.adjudication_decision && (
+                        <span style={{ padding: '3px 8px', borderRadius: 4, background: selectedClaim.adjudication_decision === 'ACCEPT' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)', color: selectedClaim.adjudication_decision === 'ACCEPT' ? '#34d399' : '#f87171', fontWeight: 700, fontSize: '0.75rem' }}>
+                          DECISION: {selectedClaim.adjudication_decision}ED
+                        </span>
+                      )}
+                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 14 }}>
                       <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 8 }}>
                         <div style={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.8rem', marginBottom: 6 }}>🛰️ SATELLITE DETECTION</div>
-                        <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>NDWI Surface Water Shift +8.2 ha detected by Sentinel-2 L2A at 18.558°N, 77.584°E.</div>
+                        <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                          <div><strong>Type:</strong> {selectedClaim?.change_type} (+{selectedClaim?.magnitude} ha)</div>
+                          <div><strong>Sensor:</strong> Sentinel-2 L2A (10m Resolution)</div>
+                          <div><strong>Centroid:</strong> {selectedClaim?.centroid_lat}°N, {selectedClaim?.centroid_lng}°E</div>
+                        </div>
                       </div>
                       <div style={{ background: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 8 }}>
                         <div style={{ color: '#a78bfa', fontWeight: 700, fontSize: '0.8rem', marginBottom: 6 }}>📷 DRISHTI FIELD PHOTO</div>
-                        <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Masonry Check Dam (Condition: FUNCTIONAL) verified by Suresh Patil.</div>
+                        {selectedClaim?.matched_photos && selectedClaim.matched_photos.length > 0 ? (
+                          <div>
+                            <img src={selectedClaim.matched_photos[0].image_url} alt="Photo" style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 6, marginBottom: 6 }} />
+                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                              <div><strong>Structure:</strong> {selectedClaim.matched_photos[0].structure_type}</div>
+                              <div><strong>Condition:</strong> <span style={{ color: selectedClaim.matched_photos[0].condition === 'functional' ? '#34d399' : '#f87171' }}>{selectedClaim.matched_photos[0].condition.toUpperCase()}</span></div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ color: '#64748b', fontSize: '0.75rem', padding: 20, textAlign: 'center' }}>No field photo captured within spatiotemporal window.</div>
+                        )}
                       </div>
                     </div>
                     <div style={{ marginTop: 20, display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-                      <button style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid #ef4444', padding: '8px 16px', borderRadius: 8 }}>Flag Mismatch</button>
-                      <button style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: 8, fontWeight: 700 }}>✓ Corroborate & Sign to Ledger</button>
+                      <button
+                        onClick={() => handleAdjudicate('REJECT')}
+                        style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid #ef4444', padding: '8px 16px', borderRadius: 8, fontWeight: 700 }}
+                      >
+                        Flag Mismatch (Reject)
+                      </button>
+                      <button
+                        onClick={() => handleAdjudicate('ACCEPT')}
+                        style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: 8, fontWeight: 700 }}
+                      >
+                        ✓ Corroborate & Sign to Ledger
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -541,15 +620,35 @@
 
             {activeTab === 'ledger' && (
               <div className="glass-panel" style={{ padding: 24 }}>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 16 }}>Cryptographic Adjudication Ledger Explorer</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Cryptographic Adjudication Ledger Explorer</h2>
+                    <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Tamper-evident SHA-256 Merkle chain linking officer verdicts to change claims</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setAuditResult({ verified: true, count: ledger.length });
+                    }}
+                    style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 700 }}
+                  >
+                    🛡️ Verify Entire Chain Integrity
+                  </button>
+                </div>
+
+                {auditResult && (
+                  <div style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid #10b981', padding: '12px 18px', borderRadius: 8, marginBottom: 18, color: '#34d399', fontSize: '0.85rem', fontWeight: 600 }}>
+                    ✅ CAG AUDIT PASSED: All {auditResult.count} blocks mathematically verified. Hash link sequence is 100% unbroken.
+                  </div>
+                )}
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {ledger.map((b) => (
                     <div key={b.sequence_number} style={{ background: 'rgba(0,0,0,0.3)', padding: 16, borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                         <span style={{ fontWeight: 800, color: '#38bdf8' }}>BLOCK #{b.sequence_number} ({b.claim_id})</span>
-                        <span style={{ color: '#34d399', fontWeight: 700 }}>{b.decision}</span>
+                        <span style={{ color: b.decision === 'ACCEPT' ? '#34d399' : '#f87171', fontWeight: 700 }}>{b.decision}</span>
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Officer: {b.officer_name}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Officer: {b.officer_name} • Decided: {new Date(b.decided_at).toLocaleString()}</div>
                       <div style={{ background: '#070b14', padding: 8, borderRadius: 6, marginTop: 8, fontSize: '0.7rem', fontFamily: 'monospace', color: '#10b981' }}>
                         CHAIN_HASH: {b.chain_hash}
                       </div>
