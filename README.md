@@ -38,7 +38,7 @@ The differentiator: satellite data and field photos become inputs **to each othe
 ## Repository Structure
 
 ```
-dummy-SIH26015/
+Walkouts035-SIH26015/
 ├── README.md
 ├── ARCHITECTURE.md          # System architecture decision records
 ├── RUNNING.md               # Verified runbook (demo-up in one command)
@@ -110,8 +110,8 @@ dummy-SIH26015/
 
 ```bash
 # 1. Clone
-git clone https://github.com/archdex-art/dummy-SIH26015.git
-cd dummy-SIH26015
+git clone https://github.com/M-Kishore92/Walkouts035-SIH26015.git
+cd Walkouts035-SIH26015
 
 # 2. Spin up the full stack
 make demo-up

@@ -1,6 +1,6 @@
 version: "3.9"
 
-name: dummy-sih26015
+name: walkouts035-sih26015
 
 services:
   # ── PostGIS ──────────────────────────────────────────────────────────────

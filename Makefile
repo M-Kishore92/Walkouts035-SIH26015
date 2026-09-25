@@ -4,7 +4,7 @@
 
 PYTHON := python
 COMPOSE := docker compose
-PROJECT := dummy-sih26015
+PROJECT := Walkouts035-SIH26015
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
