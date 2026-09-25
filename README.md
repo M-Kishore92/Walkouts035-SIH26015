@@ -6,7 +6,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green.svg)](https://fastapi.tiangolo.com/)
 [![PostGIS](https://img.shields.io/badge/PostGIS-3.4-orange.svg)](https://postgis.net/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: teamwalkouts015](https://img.shields.io/badge/License-teamwalkouts015-blue.svg)](#license)
 
 ---
 
@@ -195,7 +195,7 @@ This platform's core move:
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+This project and its codebase belong to **teamwalkouts015** (Team Walkouts 015). All rights reserved.
 
 ## Team
 
